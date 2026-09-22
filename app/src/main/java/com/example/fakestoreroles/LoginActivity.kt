@@ -32,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
             val username = etUsername.text.toString().trim()
             val password = etPassword.text.toString()
 
-            if (username.isBlank() || password.isBlank()) {
+            if (username.isBlank() || password.isBlank() || username.length > 100 || password.length > 256) {
                 tvMessage.text = "Completa el usuario y la contraseña."
                 return@setOnClickListener
             }
@@ -53,18 +53,21 @@ class LoginActivity : AppCompatActivity() {
                     SessionManager.saveSession(this, session)
 
                     runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
                         btnLogin.isEnabled = true
                         progress.visibility = View.GONE
                         openSession(session)
                     }
                 } catch (e: ApiException) {
                     runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
                         btnLogin.isEnabled = true
                         progress.visibility = View.GONE
                         tvMessage.text = e.message ?: "No se pudo iniciar sesión."
                     }
                 } catch (e: Exception) {
                     runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
                         btnLogin.isEnabled = true
                         progress.visibility = View.GONE
                         tvMessage.text = if (NetworkUtils.hasInternetConnection(this)) {
@@ -79,11 +82,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun openSession(session: SessionData) {
-        val destination = when (session.role) {
-            UserRole.ADMINISTRADOR -> AdminActivity::class.java
-            UserRole.AUDITOR -> AuditorActivity::class.java
-            UserRole.CLIENTE -> ClientActivity::class.java
-        }
+        val destination = CatalogActivity::class.java
 
         val intent = Intent(this, destination).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

@@ -33,11 +33,13 @@ object ApiService {
     }
 
     fun authenticate(username: String, password: String): SessionData {
+        if (username.isBlank() || password.isBlank() || username.length > 100 || password.length > 256) throw ApiException("Revisa usuario y contraseña.")
         val token = loginToken(username, password)
         val users = getUsers()
         val user = users.firstOrNull { it.username.equals(username, ignoreCase = true) }
             ?: throw ApiException("No se pudo obtener la información del usuario.")
 
+        if (user.id <= 0 || user.username.isBlank()) throw ApiException("Datos de usuario inválidos.")
         return SessionData(
             token = token,
             userId = user.id,
@@ -69,7 +71,7 @@ object ApiService {
             val response = readResponse(connection, code)
 
             if (code in 200..299) {
-                val token = JSONObject(response).optString("token")
+                val token = (JSONObject(response).opt("token") as? String)?.trim().orEmpty()
                 if (token.isBlank()) {
                     throw ApiException("La API no devolvió un token válido.")
                 }
@@ -106,25 +108,6 @@ object ApiService {
         return users
     }
 
-    fun getProducts(): List<ProductItem> {
-        val response = get("/products")
-        val array = JSONArray(response)
-        val products = mutableListOf<ProductItem>()
-
-        for (i in 0 until array.length()) {
-            val item = array.getJSONObject(i)
-            products.add(
-                ProductItem(
-                    id = item.optInt("id"),
-                    title = item.optString("title"),
-                    category = item.optString("category"),
-                    price = item.optDouble("price")
-                )
-            )
-        }
-        return products
-    }
-
     private fun get(path: String): String {
         val connection = URL("$BASE_URL$path").openConnection() as HttpURLConnection
         return try {
@@ -159,9 +142,3 @@ data class UserItem(
     val phone: String
 )
 
-data class ProductItem(
-    val id: Int,
-    val title: String,
-    val category: String,
-    val price: Double
-)

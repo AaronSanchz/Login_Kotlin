@@ -1,32 +1,41 @@
-# Fake Store Roles - Kotlin / Android
+# FakeStore Kotlin Android
 
-Proyecto escolar basado en las historias de usuario US01 y US02.
+Proyecto completo de continuación de Fake Store para US03, US04 y US05. Empieza abriendo **docs/GUIA_COMPLETA.html** en un navegador; contiene requisitos, arquitectura, explicación por archivo y código completo numerado.
 
-## Lo que cumple
-- Verifica Internet antes de llamar a `/auth/login`.
-- Autentica con `POST https://fakestoreapi.com/auth/login`.
-- Después obtiene los usuarios con `GET /users`, busca el username autenticado y toma su ID.
-- Mapea roles por ID: 1 y 2 Administrador, 3 Auditor, restantes Cliente.
-- Guarda token, ID, username y rol en `EncryptedSharedPreferences`.
-- Restaura una sesión guardada al volver a abrir la app.
-- Cierra sesión borrando el almacenamiento de sesión y el carrito local.
-- Usa `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK` para impedir regresar a pantallas protegidas después del logout.
 
-## Usuarios de prueba
-- Administrador (ID 2): `mor_2314` / `83r5^_`
-- Auditor (ID 3): `kevinryan` / `kev02937@`
-- Cliente (ID 4): `donero` / `ewedon`
+## Abrir y ejecutar Kotlin
 
-> `johnd` tiene ID 1, así que según US01 también corresponde a Administrador.
+Extrae el ZIP y abre la carpeta FakeStore_Kotlin_Android en Android Studio. Espera la sincronización de Gradle, selecciona un emulador o teléfono Android y ejecuta el módulo app.
 
-## Cómo ejecutar
-1. Abre la carpeta en Android Studio.
-2. Selecciona JDK 17 para Gradle.
-3. Sincroniza el proyecto.
-4. Ejecuta en un emulador o teléfono Android.
+Configuración: JDK 17 o 21, Gradle 8.9, Android Gradle Plugin 8.7.3, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 23. Para la comprobación se usó JDK 21 con destino JVM 17. Instala Android SDK Platform 35 y acepta sus licencias. Android Studio creará local.properties con sdk.dir de tu computadora; alternativamente configura ANDROID_HOME.
 
-## Compatibilidad
-- minSdk 23
-- targetSdk 35
-- Java/Kotlin JVM 17
-- Gradle 8.9
+```powershell
+.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat :app:assembleDebug
+```
+
+En macOS/Linux, habilita permiso de ejecución si hace falta y usa ./gradlew en lugar de .\gradlew.bat. Se incluye el wrapper estándar y su JAR; no es necesario instalar Gradle global. La primera sincronización necesita Internet.
+
+El APK de prueba se crea en app/build/outputs/apk/debug/app-debug.apk. La aplicación usa com.example.fakestoreroles.kotlin para poder instalarla junto con la versión Flutter. Conserva el namespace de clases anterior; al cambiar el ID, esta versión Kotlin necesita iniciar sesión nuevamente y no comparte preferencias con una instalación anterior.
+
+Las pruebas locales JUnit usan org.json para la JVM y coroutines-test. Glide gestiona las imágenes y RecyclerView recicla las filas. Las preferencias cifradas heredadas generan avisos de deprecación de security-crypto; se conservan y su futura migración no forma parte de US03–US05.
+
+## Cuentas de demostración del proyecto base
+
+| Perfil | Usuario | Contraseña |
+|---|---|---|
+| Administrador ID 2 | mor_2314 | 83r5^_ |
+| Auditor ID 3 | kevinryan | kev02937@ |
+| Cliente ID 4 | donero | ewedon |
+
+Son cuentas públicas de ejemplo del código recibido. Su disponibilidad depende del servicio y no se garantiza si cambia la base remota. No se añade un acceso que omita la autenticación cuando la API no está disponible.
+
+## Documentación
+
+- docs/ARQUITECTURA_Y_REQUISITOS.md
+- docs/CODIGO_EXPLICADO.md
+- docs/VERIFICACION.md
+- docs/CAMBIOS_SOBRE_BASE.md
+- docs/historias
+
+Los avisos y límites de Fake Store están descritos en la guía y en las pantallas de gestión.

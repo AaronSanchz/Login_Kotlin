@@ -19,7 +19,7 @@ class AdminActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val session = SessionManager.getSession(this)
-        if (session == null) {
+        if (session == null || session.role != UserRole.ADMINISTRADOR) {
             goToLogin()
             return
         }
@@ -48,6 +48,7 @@ class AdminActivity : AppCompatActivity() {
             try {
                 val users = ApiService.getUsers()
                 runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
                     progress.visibility = View.GONE
                     if (users.isEmpty()) {
                         message.text = "No hay usuarios para mostrar."
@@ -57,6 +58,7 @@ class AdminActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 runOnUiThread {
+                    if (isFinishing || isDestroyed) return@runOnUiThread
                     progress.visibility = View.GONE
                     message.text = "No se pudieron cargar los usuarios."
                 }

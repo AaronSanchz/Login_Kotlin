@@ -4,7 +4,7 @@ object CartState {
     private val productIds = mutableListOf<Int>()
 
     fun add(productId: Int) {
-        productIds.add(productId)
+        if (productId > 0) productIds.add(productId)
     }
 
     fun count(): Int = productIds.size

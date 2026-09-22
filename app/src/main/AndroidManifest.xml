@@ -5,10 +5,12 @@
 
     <application
         android:allowBackup="false"
-        android:label="Fake Store Roles"
+        android:label="Fake Store Kotlin"
         android:supportsRtl="true"
         android:theme="@style/Theme.FakeStoreRoles">
 
+        <activity android:name=".CatalogActivity" android:exported="false" />
+        <activity android:name=".ProductDetailActivity" android:exported="false" />
         <activity android:name=".ClientActivity" android:exported="false" />
         <activity android:name=".AuditorActivity" android:exported="false" />
         <activity android:name=".AdminActivity" android:exported="false" />

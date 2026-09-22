@@ -3,5 +3,7 @@
     <style name="Theme.FakeStoreRoles" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="colorAccent">#12685E</item>
+        <item name="android:windowBackground">#F5F7F6</item>
     </style>
 </resources>

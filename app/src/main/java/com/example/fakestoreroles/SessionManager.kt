@@ -30,14 +30,16 @@ object SessionManager {
             .apply()
     }
 
-    fun getSession(context: Context): SessionData? {
+    fun getSession(context: Context): SessionData? = try { readSession(context) } catch (_: Exception) { null }
+
+    private fun readSession(context: Context): SessionData? {
         val prefs = preferences(context)
         val token = prefs.getString(KEY_TOKEN, null) ?: return null
         val username = prefs.getString(KEY_USERNAME, null) ?: return null
         val roleText = prefs.getString(KEY_ROLE, null) ?: return null
         val userId = prefs.getInt(KEY_USER_ID, -1)
 
-        if (token.isBlank() || userId < 1) return null
+        if (token.isBlank() || username.isBlank() || userId < 1) return null
 
         val role = try {
             UserRole.valueOf(roleText)
