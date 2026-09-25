@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Catálogo, filtros, carga, errores y navegación. */
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.Gravity
@@ -12,10 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
 
+/** Presenta el catálogo y observa CatalogViewModel. */
 class CatalogActivity : AppCompatActivity() {
     private lateinit var model: CatalogViewModel
     private val detail = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == RESULT_OK) model.load()
+        if (it.resultCode == RESULT_OK) model.load(model.state.value.selected)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

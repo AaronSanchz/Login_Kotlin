@@ -1,9 +1,12 @@
 package com.example.fakestoreroles
 
+/** Comprobación de conectividad de las operaciones de red. */
+
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 
+/** Comprueba la conectividad antes de consultar el servicio. */
 object NetworkUtils {
     fun hasInternetConnection(context: Context): Boolean {
         val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

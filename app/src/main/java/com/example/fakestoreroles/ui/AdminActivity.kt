@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Pantalla y acciones disponibles para el administrador. */
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -9,8 +11,13 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.*
+
+/** Presenta el área de gestión del administrador. */
 class AdminActivity : AppCompatActivity() {
 
+    private var loading = false
     private lateinit var usersContainer: LinearLayout
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
@@ -25,6 +32,7 @@ class AdminActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_admin)
+        applyStoreInsets(findViewById(android.R.id.content))
 
         findViewById<TextView>(R.id.tvAdminSession).text =
             "Sesión: ${session.username} | ID: ${session.userId}"
@@ -40,32 +48,27 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun loadUsers() {
+        if (loading) return
+        loading = true
+        val reload = findViewById<Button>(R.id.btnReloadUsers)
+        reload.isEnabled = false
         progress.visibility = View.VISIBLE
         message.text = ""
         usersContainer.removeAllViews()
-
-        Thread {
+        lifecycleScope.launch {
             try {
-                val users = ApiService.getUsers()
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    progress.visibility = View.GONE
-                    if (users.isEmpty()) {
-                        message.text = "No hay usuarios para mostrar."
-                    } else {
-                        users.forEach { addUserView(it) }
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    progress.visibility = View.GONE
-                    message.text = "No se pudieron cargar los usuarios."
-                }
+                val users = withContext(Dispatchers.IO) { ApiService.getUsers() }
+                if (users.isEmpty()) message.text = "No hay usuarios para mostrar."
+                else users.forEach { addUserView(it) }
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { message.text = "No se pudieron cargar los usuarios. Reintenta." }
+            finally {
+                loading = false
+                reload.isEnabled = true
+                progress.visibility = View.GONE
             }
-        }.start()
+        }
     }
-
     private fun addUserView(user: UserItem) {
         val textView = TextView(this)
         val fullName = "${user.firstName} ${user.lastName}".trim().ifBlank { "Usuario" }
@@ -91,7 +94,7 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun logout() {
-        SessionManager.clearSession(this)
+        try { SessionManager.clearSession(this) } catch (_: Exception) { message.text = "No se pudo cerrar sesión. Reintenta."; return }
         CartState.clear()
         goToLogin()
     }

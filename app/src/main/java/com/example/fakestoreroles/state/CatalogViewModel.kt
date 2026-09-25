@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Estado, filtros y concurrencia de las consultas del catálogo. */
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** Agrupa productos, categorías, selección, carga y errores. */
 data class CatalogState(
     val products: List<Product> = emptyList(), val categories: List<String> = emptyList(),
     val selected: String? = null, val loading: Boolean = false,

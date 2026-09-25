@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Componentes visuales compartidos de la aplicación. */
+
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -13,6 +15,7 @@ fun android.content.Context.dp(value: Int): Int = (value * resources.displayMetr
 fun android.content.Context.label(value: String, size: Float = 16f) = TextView(this).apply {
     text = value; textSize = size; setTextColor(Color.rgb(25, 45, 42)); setPadding(0, dp(6), 0, dp(6))
 }
+/** Crea un botón táctil accesible; cada pantalla aporta la acción autorizada. */
 fun android.content.Context.action(value: String, onClick: () -> Unit) = Button(this).apply {
     text = value; isAllCaps = false; minHeight = dp(48); setOnClickListener { onClick() }
 }
@@ -34,4 +37,14 @@ fun AppCompatActivity.storeRoot(title: String): LinearLayout {
 }
 fun android.content.Context.cardBackground() = GradientDrawable().apply {
     setColor(Color.WHITE); cornerRadius = dp(16).toFloat(); setStroke(dp(1), Color.rgb(220, 230, 226))
+}
+
+/** Evita que los formularios XML queden debajo de las barras de Android 15. */
+fun AppCompatActivity.applyStoreInsets(root: android.view.View) {
+    ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+        val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime())
+        view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+        insets
+    }
+    ViewCompat.requestApplyInsets(root)
 }

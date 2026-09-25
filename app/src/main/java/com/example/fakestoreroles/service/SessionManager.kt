@@ -1,9 +1,12 @@
 package com.example.fakestoreroles
 
+/** Almacenamiento seguro de la sesión. */
+
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
+/** Guarda y recupera la sesión local cifrada. */
 object SessionManager {
     private const val FILE_NAME = "secure_session"
     private const val KEY_TOKEN = "token"

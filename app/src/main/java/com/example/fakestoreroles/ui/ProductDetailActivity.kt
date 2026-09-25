@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Detalle y controles según rol para carrito, edición y eliminación. */
+
 import android.os.Bundle
 import android.widget.*
 import android.text.InputType
@@ -11,6 +13,7 @@ import com.bumptech.glide.Glide
 import kotlinx.coroutines.*
 import java.util.Locale
 
+/** Presenta detalle y controla acciones según el rol. */
 class ProductDetailActivity : AppCompatActivity() {
     private lateinit var repository: ProductRepository
     private lateinit var root: LinearLayout
@@ -24,15 +27,26 @@ class ProductDetailActivity : AppCompatActivity() {
         val app = applicationContext
         repository = HttpProductRepository({ SessionManager.getSession(app) })
         val id = intent.getIntExtra("id", -1)
+        loadProduct(id)
+    }
+    private fun loadProduct(id: Int) {
+        root = storeRoot("Detalle del producto")
+        root.addView(ProgressBar(this))
         lifecycleScope.launch {
             try {
-                if (SessionManager.getSession(this@ProductDetailActivity) == null) throw ApiException("Sin sesión")
+                if (SessionManager.getSession(this@ProductDetailActivity) == null) {
+                    startActivity(android.content.Intent(this@ProductDetailActivity, LoginActivity::class.java)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
+                    finish(); return@launch
+                }
                 product = withContext(Dispatchers.IO) { repository.detail(id) }
                 render()
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) {
-                Toast.makeText(this@ProductDetailActivity,"Producto no disponible",Toast.LENGTH_LONG).show()
-                setResult(RESULT_OK); finish()
+            catch (e: Exception) {
+                root = storeRoot("Detalle del producto")
+                root.addView(label(e.message ?: "No se pudo cargar el producto."))
+                root.addView(action("Reintentar") { loadProduct(id) })
+                root.addView(action("Volver al catálogo") { finish() })
             }
         }
     }

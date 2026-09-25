@@ -5,6 +5,13 @@ import org.junit.Test
 import org.json.JSONObject
 
 class ProductTest {
+    @Test fun httpErrorsRetainStatusAndContext() {
+        assertTrue(HttpErrorMapper.message(401, true).contains("contraseña"))
+        assertTrue(HttpErrorMapper.message(401, false).contains("acceso"))
+        for (code in listOf(400, 403, 404, 408, 429, 500, 503, 504)) {
+            assertTrue(HttpErrorMapper.message(code).contains(code.toString()))
+        }
+    }
     private val json = """{"id":1,"title":"Camisa","price":19.5,"description":"Algodón","category":"men's clothing","image":"https://example.com/a.png","rating":{"rate":4.2,"count":9}}"""
     private fun session(role: UserRole) = SessionData("test",1,"test",role)
     @Test fun mapsAllFields() { val p = Product.fromJson(JSONObject(json)); assertEquals(9,p.rating?.count);assertEquals("Algodón",p.description) }
@@ -64,5 +71,18 @@ class ProductTest {
         val repo = HttpProductRepository({session(UserRole.ADMINISTRADOR)},StoreTransport { _,_,_ -> calls++;json })
         assertThrows(ApiException::class.java) { repo.update(Product.fromJson(JSONObject(json)).copy(title=""),listOf("men's clothing")) }
         assertEquals(0,calls)
+    }
+    @Test fun categoryMismatchAndUnconfirmedWritesFailClosed() {
+        val p = Product.fromJson(JSONObject(json))
+        var calls = 0
+        val repo = HttpProductRepository({session(UserRole.ADMINISTRADOR)}, StoreTransport { method, _, _ ->
+            calls++
+            if (method == "PUT") JSONObject(json).put("id", 99).toString() else "{}"
+        })
+        assertThrows(ApiException::class.java) { repo.update(p, listOf("jewelery")) }
+        assertEquals(0, calls)
+        assertThrows(ApiException::class.java) { repo.update(p, listOf("men's clothing")) }
+        assertThrows(ApiException::class.java) { repo.delete(1) }
+        assertEquals(2, calls)
     }
 }

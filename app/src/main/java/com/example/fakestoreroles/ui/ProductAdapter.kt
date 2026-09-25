@@ -1,5 +1,7 @@
 package com.example.fakestoreroles
 
+/** Filas seleccionables de productos del catálogo. */
+
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout

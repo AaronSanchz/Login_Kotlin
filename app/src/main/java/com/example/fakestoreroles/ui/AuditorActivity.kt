@@ -1,11 +1,13 @@
 package com.example.fakestoreroles
 
+/** Pantalla de consulta del auditor. */
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
 /** Adaptador de la ruta anterior al catálogo común con permisos de sesión. */
-class ClientActivity : AppCompatActivity() {
+class AuditorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startActivity(Intent(this, CatalogActivity::class.java))

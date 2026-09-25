@@ -1,5 +1,8 @@
 package com.example.fakestoreroles
 
+/** Estado temporal del carrito y conteo de productos. */
+
+/** Cuenta los productos agregados al carrito durante la sesión. */
 object CartState {
     private val productIds = mutableListOf<Int>()
 
