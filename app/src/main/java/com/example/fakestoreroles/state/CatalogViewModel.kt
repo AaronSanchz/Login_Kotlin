@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: Estado CatalogState expuesto como StateFlow de solo lectura. load limpia datos y cancela el Job anterior; generation evita respuestas obsoletas. viewModelScope y Dispatchers.IO separan ciclo de vida y trabajo HTTP.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Estado, filtros y concurrencia de las consultas del catálogo. */
@@ -26,6 +29,7 @@ class CatalogViewModel(private val repository: ProductRepository, private val io
     private var productsJob: Job? = null
     private var generation = 0
     init { load(); loadCategories() }
+    /** Recibe categoría opcional; limpia lista, marca carga y acepta solo la respuesta de la generación actual. */
     fun load(category: String? = null) {
         if (category != null && category !in mutable.value.categories) return
         val request = ++generation
@@ -41,6 +45,7 @@ class CatalogViewModel(private val repository: ProductRepository, private val io
             }
         }
     }
+    /** Consulta categorías con indicador y error independientes; evita solicitudes simultáneas duplicadas. */
     fun loadCategories() {
         if (mutable.value.categoriesLoading) return
         mutable.value = mutable.value.copy(categoriesLoading = true, categoryError = null)

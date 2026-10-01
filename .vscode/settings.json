@@ -1,0 +1,5 @@
+{
+  "java.import.gradle.enabled": false,
+  "files.exclude": {"**/.gradle": true, "**/build": true, "**/.kotlin": true},
+  "files.encoding": "utf8"
+}

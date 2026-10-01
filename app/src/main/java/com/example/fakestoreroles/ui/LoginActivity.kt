@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: US01: enlaza activity_login.xml con LoginController. Revisa red, bloquea campos mientras autentica, guarda sesión segura y abre catálogo con CLEAR_TASK. Errores se dibujan en tvMessage rojo.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Pantalla de acceso y navegación tras autenticar. */
@@ -16,6 +19,7 @@ import kotlinx.coroutines.*
 /** Presenta el formulario y delega el acceso a LoginController. */
 class LoginActivity : AppCompatActivity() {
     private val controller = LoginController()
+    /** Entrada del ciclo de vida Android: enlaza o construye vistas, revisa sesión cuando aplica y prepara callbacks de esta pantalla. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (SessionManager.getSession(this) != null) { openSession(); return }
@@ -59,6 +63,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
+    /** Abre CatalogActivity con NEW_TASK y CLEAR_TASK; elimina Login de la pila y termina la Activity actual. */
     private fun openSession() {
         startActivity(Intent(this, CatalogActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

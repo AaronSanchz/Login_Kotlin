@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: Sesión cifrada con EncryptedSharedPreferences y MasterKey. Guarda token, ID, nombre y rol; commit comprueba escritura o borrado. getSession devuelve null si los datos no permiten recuperar una sesión.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Almacenamiento seguro de la sesión. */
@@ -14,6 +17,7 @@ object SessionManager {
     private const val KEY_USERNAME = "username"
     private const val KEY_ROLE = "role"
 
+    /** Abre las preferencias cifradas con clave del sistema; centraliza algoritmos y archivo de almacenamiento. */
     private fun preferences(context: Context) = EncryptedSharedPreferences.create(
         context,
         FILE_NAME,
@@ -24,17 +28,21 @@ object SessionManager {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
+    /** Persiste token, ID, nombre y rol de la sesión; nunca almacena contraseña. Solo se navega después del guardado. */
     fun saveSession(context: Context, session: SessionData) {
-        preferences(context).edit()
+        val saved = preferences(context).edit()
             .putString(KEY_TOKEN, session.token)
             .putInt(KEY_USER_ID, session.userId)
             .putString(KEY_USERNAME, session.username)
             .putString(KEY_ROLE, session.role.name)
-            .apply()
+            .commit()
+        if (!saved) throw ApiException("No se pudo guardar la sesión en el dispositivo.")
     }
 
+    /** Recupera sesión cifrada o null ante fallo; no concede permisos si no puede leer los datos. */
     fun getSession(context: Context): SessionData? = try { readSession(context) } catch (_: Exception) { null }
 
+    /** Valida campos de preferencias cifradas y convierte el nombre del rol a UserRole. */
     private fun readSession(context: Context): SessionData? {
         val prefs = preferences(context)
         val token = prefs.getString(KEY_TOKEN, null) ?: return null
@@ -59,7 +67,10 @@ object SessionManager {
         )
     }
 
+    /** Elimina los datos persistidos de sesión; el llamador debe limpiar además el carrito y el historial visual. */
     fun clearSession(context: Context) {
-        preferences(context).edit().clear().apply()
+        if (!preferences(context).edit().clear().commit()) {
+            throw ApiException("No se pudo borrar la sesión del dispositivo.")
+        }
     }
 }

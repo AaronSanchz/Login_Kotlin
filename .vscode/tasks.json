@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {"label":"Fake Store: compilar APK", "type":"process", "command":"powershell.exe", "args":["-NoProfile","-ExecutionPolicy","Bypass","-File","${workspaceFolder}/ejecutar.ps1","-Accion","compilar"], "group":{"kind":"build","isDefault":true}, "problemMatcher":[]},
+    {"label":"Fake Store: ejecutar app", "type":"process", "command":"powershell.exe", "args":["-NoProfile","-ExecutionPolicy","Bypass","-File","${workspaceFolder}/ejecutar.ps1","-Accion","ejecutar"], "problemMatcher":[]},
+    {"label":"Fake Store: pruebas", "type":"process", "command":"powershell.exe", "args":["-NoProfile","-ExecutionPolicy","Bypass","-File","${workspaceFolder}/ejecutar.ps1","-Accion","pruebas"], "group":"test", "problemMatcher":[]}
+  ]
+}

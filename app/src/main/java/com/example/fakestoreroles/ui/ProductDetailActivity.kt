@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: US05, US07 y US08: GET de detalle, controles solo para Administrador y carrito para Cliente. edit abre diálogo precargado; guardar ejecuta PUT y actualiza product local. confirmDelete exige diálogo antes del DELETE.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Detalle y controles según rol para carrito, edición y eliminación. */
@@ -20,6 +23,7 @@ class ProductDetailActivity : AppCompatActivity() {
     private var product: Product? = null
     private var busy = false
 
+    /** Entrada del ciclo de vida Android: enlaza o construye vistas, revisa sesión cuando aplica y prepara callbacks de esta pantalla. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         root = storeRoot("Detalle del producto")
@@ -29,6 +33,7 @@ class ProductDetailActivity : AppCompatActivity() {
         val id = intent.getIntExtra("id", -1)
         loadProduct(id)
     }
+    /** Carga producto del ID recibido en Dispatchers.IO; sesión ausente abre Login y fallo de detalle avisa y vuelve al catálogo. */
     private fun loadProduct(id: Int) {
         root = storeRoot("Detalle del producto")
         root.addView(ProgressBar(this))
@@ -43,13 +48,12 @@ class ProductDetailActivity : AppCompatActivity() {
                 render()
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
-                root = storeRoot("Detalle del producto")
-                root.addView(label(e.message ?: "No se pudo cargar el producto."))
-                root.addView(action("Reintentar") { loadProduct(id) })
-                root.addView(action("Volver al catálogo") { finish() })
+                Toast.makeText(this@ProductDetailActivity, "Producto no disponible", Toast.LENGTH_LONG).show()
+                setResult(RESULT_OK); finish()
             }
         }
     }
+    /** Reconstruye el detalle desde product y sesión actual; solo añade controles de gestión al Administrador. */
     private fun render() {
         val p = product ?: return
         root = storeRoot("Detalle del producto")
@@ -73,10 +77,11 @@ class ProductDetailActivity : AppCompatActivity() {
             if(busy) content.addView(ProgressBar(this))
         }
     }
+    /** Abre AlertDialog con Cancelar y Eliminar; únicamente la confirmación ejecuta DELETE y cierra detalle tras respuesta válida. */
     private fun confirmDelete() {
-        if(busy) return
+        if(busy || SessionManager.getSession(this)?.role != UserRole.ADMINISTRADOR) return
         AlertDialog.Builder(this).setTitle("Eliminar producto")
-            .setMessage("La API simula esta operación y conserva el producto. ¿Continuar?")
+            .setMessage("¿Estás seguro de eliminar este producto? La API simula esta operación y conserva el producto.")
             .setNegativeButton("Cancelar",null).setPositiveButton("Eliminar") { _,_ ->
                 busy = true; render()
                 lifecycleScope.launch {
@@ -90,8 +95,9 @@ class ProductDetailActivity : AppCompatActivity() {
                 }
             }.show()
     }
+    /** Revisa permiso, obtiene categorías en IO y abre el diálogo editor; los fallos se muestran sin reemplazar el producto. */
     private fun edit() {
-        if(busy) return
+        if(busy || SessionManager.getSession(this)?.role != UserRole.ADMINISTRADOR) return
         busy = true; render()
         lifecycleScope.launch {
             try {
@@ -103,9 +109,12 @@ class ProductDetailActivity : AppCompatActivity() {
             finally { busy = false; render() }
         }
     }
+    /** Precarga campos del producto; valida al pulsar Guardar, bloquea diálogo y muestra progreso durante PUT, luego actualiza detalle local. */
     private fun showEditor(categories: List<String>) {
+        if (SessionManager.getSession(this)?.role != UserRole.ADMINISTRADOR) return
         val p = product ?: return
         val form = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20),dp(12),dp(20),dp(12)) }
+        /** Crea campo precargado: label identifica dato, value es texto inicial y type configura teclado. */
         fun field(label: String, value: String, type: Int = InputType.TYPE_CLASS_TEXT): EditText {
             form.addView(this.label(label))
             return EditText(this).apply { setText(value); inputType = type; contentDescription = label; form.addView(this) }
@@ -121,7 +130,8 @@ class ProductDetailActivity : AppCompatActivity() {
             adapter = ArrayAdapter(this@ProductDetailActivity,android.R.layout.simple_spinner_dropdown_item,listOf("Selecciona una categoría") + categories)
             setSelection(categories.indexOf(p.category).let { if(it < 0) 0 else it+1 }); form.addView(this)
         }
-        val error = label(""); form.addView(error)
+        val error = label("").apply { setTextColor(android.graphics.Color.RED) }; form.addView(error)
+        val progress = ProgressBar(this).apply { visibility = View.GONE }; form.addView(progress)
         val dialog = AlertDialog.Builder(this).setTitle("Editar producto").setView(ScrollView(this).apply { addView(form) })
             .setNegativeButton("Cancelar",null).setPositiveButton("Guardar",null).create()
         dialog.setOnShowListener {
@@ -139,14 +149,16 @@ class ProductDetailActivity : AppCompatActivity() {
                 dialog.setCancelable(false)
                 listOf<View>(title,price,description,image,category).forEach { it.isEnabled = false }
                 error.text = "Guardando…"
+                progress.visibility = View.VISIBLE
                 lifecycleScope.launch {
                     try {
                         product = withContext(Dispatchers.IO) { repository.update(updated,categories) }
-                        Toast.makeText(this@ProductDetailActivity,"Edición simulada confirmada. La API no guarda los cambios.",Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@ProductDetailActivity,"Producto actualizado (Simulación)",Toast.LENGTH_LONG).show()
                         dialog.dismiss(); render()
                     } catch(e: CancellationException) { dialog.dismiss(); throw e }
                     catch(e: Exception) { error.text = e.message ?: "No se pudo guardar." }
                     finally {
+                        progress.visibility = View.GONE
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
                         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = true
                         dialog.setCancelable(true)

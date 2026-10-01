@@ -1,46 +1,31 @@
-# FakeStore Kotlin Android
+# Fake Store Kotlin — Actualización US06 a US08
 
-**Versión reestructurada:** consulta [ARQUITECTURA_Y_PRUEBAS.md](ARQUITECTURA_Y_PRUEBAS.md) para la arquitectura y el código actual. La guía HTML incluida documenta la base anterior.
+Esta actualización agrega **US06: agregar producto**, **US07: editar producto** y **US08: eliminar producto**. Conserva la base US01–US05: login, roles locales, sesión segura, cierre de sesión, catálogo, categorías y detalle. El proyecto completo abarca US01–US08; el alcance nuevo de esta entrega es US06–US08.
 
-Proyecto completo de continuación de Fake Store para US03, US04 y US05. Empieza abriendo **docs/GUIA_COMPLETA.html** en un navegador; contiene requisitos, arquitectura, explicación por archivo y código completo numerado.
+## Versiones conservadas
 
+Kotlin 2.0.21 · Gradle 8.9 · AGP 8.7.3 · Android SDK 35 (mínimo 23). Java utilizado: Microsoft OpenJDK 21.0.12.1; destino Java/JVM 17. No se actualizaron SDK ni plugins. Flutter mantiene pubspec.lock del ZIP original.
 
-## Abrir y ejecutar Kotlin
+## Ejecutar
 
-Extrae el ZIP y abre la carpeta FakeStore_Kotlin_Android en Android Studio. Espera la sincronización de Gradle, selecciona un emulador o teléfono Android y ejecuta el módulo app.
-
-Configuración: JDK 17 o 21, Gradle 8.9, Android Gradle Plugin 8.7.3, Kotlin 2.0.21, compileSdk/targetSdk 35, minSdk 23. Para la comprobación se usó JDK 21 con destino JVM 17. Instala Android SDK Platform 35 y acepta sus licencias. Android Studio creará local.properties con sdk.dir de tu computadora; alternativamente configura ANDROID_HOME.
+Abre la raíz del proyecto en tu editor. Configura tu SDK Android y JDK; local.properties es personal y no se publica. En Flutter usa el SDK 3.47.2. En Kotlin abre el módulo app en Android Studio y selecciona JDK 21 y SDK 35.
 
 ```powershell
 .\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat :app:lintDebug
 .\gradlew.bat :app:assembleDebug
 ```
 
-En macOS/Linux, habilita permiso de ejecución si hace falta y usa ./gradlew en lugar de .\gradlew.bat. Se incluye el wrapper estándar y su JAR; no es necesario instalar Gradle global. La primera sincronización necesita Internet.
+## Reglas de US06–US08
 
-El APK de prueba se crea en app/build/outputs/apk/debug/app-debug.apk. La aplicación usa com.example.fakestoreroles.kotlin para poder instalarla junto con la versión Flutter. Conserva el namespace de clases anterior; al cambiar el ID, esta versión Kotlin necesita iniciar sesión nuevamente y no comparte preferencias con una instalación anterior.
+Solo Administrador puede crear, editar y eliminar. El repositorio comprueba el rol antes de enviar POST, PUT o DELETE, además de restringir los botones. La creación valida campos, muestra el ID recibido y limpia el formulario. La edición precarga valores, bloquea el guardado mientras espera y actualiza el detalle local. El borrado pide confirmación; Cancelar conserva el detalle sin enviar DELETE y confirmar vuelve al catálogo.
 
-Las pruebas locales JUnit usan org.json para la JVM y coroutines-test. Glide gestiona las imágenes y RecyclerView recicla las filas. Las preferencias cifradas heredadas generan avisos de deprecación de security-crypto; se conservan y su futura migración no forma parte de US03–US05.
+Fake Store **simula las escrituras y no persiste cambios**. Un producto eliminado puede reaparecer al consultar; la edición se refleja localmente con la respuesta recibida. Los controles de rol son académicos y locales; un backend propio debe validar permisos en servidor.
 
-## Cuentas de demostración del proyecto base
+## Roles y prueba
 
-| Perfil | Usuario | Contraseña |
-|---|---|---|
-| Administrador ID 2 | mor_2314 | 83r5^_ |
-| Auditor ID 3 | kevinryan | kev02937@ |
-| Cliente ID 4 | donero | ewedon |
+IDs 1 y 2: Administrador; ID 3: Auditor; demás: Cliente. Cuenta pública de ejemplo Administrador: mor_2314 / 83r5^_. No es una credencial privada.
 
-Son cuentas públicas de ejemplo del código recibido. Su disponibilidad depende del servicio y no se garantiza si cambia la base remota. No se añade un acceso que omita la autenticación cuando la API no está disponible.
+Flutter: 27 pruebas aprobadas, análisis sin incidencias y APK debug. Kotlin: 22 pruebas aprobadas, APK debug y lint con cero errores y 34 avisos. Emulador Android 35: login/catálogo y creación real con ID 21 en ambas apps; edición y eliminación nativas; modo avión Flutter. Falta reproducir todos los escenarios en teléfono físico.
 
-## Documentación
-
-- docs/ARQUITECTURA_Y_REQUISITOS.md
-- docs/CODIGO_EXPLICADO.md
-- docs/VERIFICACION.md
-- docs/CAMBIOS_SOBRE_BASE.md
-- docs/historias
-
-Los avisos y límites de Fake Store están descritos en la guía y en las pantallas de gestión.
-# Reestructuración POO US03–US05
-
-Consulta [ARQUITECTURA_Y_PRUEBAS.md](ARQUITECTURA_Y_PRUEBAS.md) para la separación de vistas, controladores, modelos, validaciones, red y servicios, junto con los botones, permisos, códigos HTTP y pruebas ampliadas.
+El repositorio contiene código comentado, pruebas, configuración y este README. La guía de aprendizaje y el informe detallado se entregan por separado.

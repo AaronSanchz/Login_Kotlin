@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: US01: consulta ConnectivityManager y exige red activa con capacidades INTERNET y VALIDATED. LoginActivity lo llama antes de autenticar; no garantiza que el servidor responda después.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Comprobación de conectividad de las operaciones de red. */
@@ -8,6 +11,7 @@ import android.net.NetworkCapabilities
 
 /** Comprueba la conectividad antes de consultar el servicio. */
 object NetworkUtils {
+    /** Comprueba conectividad antes de intentar autenticación; una comprobación positiva no garantiza que el servidor responda. */
     fun hasInternetConnection(context: Context): Boolean {
         val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = manager.activeNetwork ?: return false

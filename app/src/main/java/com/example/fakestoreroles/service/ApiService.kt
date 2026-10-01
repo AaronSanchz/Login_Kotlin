@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: US01: define roles y SessionData, autentica con POST /auth/login y obtiene usuario con GET /users. El mapeo local usa IDs 1/2, 3 y restantes. UserItem contiene únicamente datos de consulta.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Autenticación, usuarios y asignación local de roles. */
@@ -30,6 +33,7 @@ class ApiException(message: String) : Exception(message)
 object ApiService {
 
 
+    /** Asigna 1 y 2 a Administrador, 3 a Auditor y demás a Cliente. Es una regla local, no un rol devuelto por Fake Store. */
     fun roleFromId(id: Int): UserRole {
         return when (id) {
             1, 2 -> UserRole.ADMINISTRADOR
@@ -38,6 +42,7 @@ object ApiService {
         }
     }
 
+    /** Valida credenciales y obtiene token/usuario para construir SessionData; no elude errores de autenticación. */
     fun authenticate(username: String, password: String, transport: StoreTransport = HttpStoreTransport()): SessionData {
         if (username.isBlank() || password.isBlank() || username.length > 100 || password.length > 256) throw ApiException("Revisa usuario y contraseña.")
         val token = loginToken(username, password, transport)
@@ -54,6 +59,7 @@ object ApiService {
         )
     }
 
+    /** Envía credenciales al transporte y extrae token no vacío; JSON incompleto produce ApiException. */
     private fun loginToken(username: String, password: String, transport: StoreTransport): String {
         val body = JSONObject().put("username", username).put("password", password)
         return try {
@@ -62,6 +68,7 @@ object ApiService {
                 ?: throw ApiException("La API no devolvió un token válido.")
         } catch (_: org.json.JSONException) { throw ApiException("La API devolvió un login inválido. Reintenta.") }
     }
+    /** Obtiene GET /users y mapea información de usuarios; las pantallas administrativas controlan permiso antes de invocarlo. */
     fun getUsers(transport: StoreTransport = HttpStoreTransport()): List<UserItem> {
         val response = transport.request("GET", "/users", null)
         val array = JSONArray(response)

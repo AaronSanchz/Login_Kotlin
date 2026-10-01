@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: ListAdapter recicla filas de RecyclerView. Holder conserva vistas; onBindViewHolder asigna datos y Glide descarga imagen. Diff compara ID y contenido; al reciclar se libera la carga de imagen.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Filas seleccionables de productos del catálogo. */
@@ -15,6 +18,7 @@ import java.util.Locale
 /** Recicla filas e imágenes: nunca coloca todo el catálogo en un ScrollView. */
 class ProductAdapter(private val select: (Product) -> Unit) : ListAdapter<Product, ProductAdapter.Holder>(Diff) {
     class Holder(val row: LinearLayout, val image: ImageView, val title: TextView, val price: TextView, val category: TextView) : RecyclerView.ViewHolder(row)
+    /** Construye una fila y sus vistas una vez para que RecyclerView pueda reutilizarlas. */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val c = parent.context
         val row = LinearLayout(c).apply {
@@ -30,6 +34,7 @@ class ProductAdapter(private val select: (Product) -> Unit) : ListAdapter<Produc
         column.addView(category); column.addView(title); column.addView(price); column.addView(c.label("Ver detalle", 13f))
         return Holder(row, image, title, price, category)
     }
+    /** Asigna Product a una fila reciclada, carga imagen con Glide y conecta pulsación a select(product). */
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val p = getItem(position)
         holder.title.text = p.title; holder.category.text = p.category
@@ -39,9 +44,12 @@ class ProductAdapter(private val select: (Product) -> Unit) : ListAdapter<Produc
             .error(android.R.drawable.ic_menu_report_image).fitCenter().into(holder.image)
         holder.row.setOnClickListener { select(p) }
     }
+    /** Cancela y limpia la imagen del Holder antes de devolverlo al reciclador. */
     override fun onViewRecycled(holder: Holder) { Glide.with(holder.image).clear(holder.image); super.onViewRecycled(holder) }
     private object Diff : DiffUtil.ItemCallback<Product>() {
+        /** Compara IDs para decidir si dos registros representan el mismo artículo. */
         override fun areItemsTheSame(oldItem: Product, newItem: Product) = oldItem.id == newItem.id
+        /** Compara datos completos para decidir si RecyclerView debe redibujar una fila. */
         override fun areContentsTheSame(oldItem: Product, newItem: Product) = oldItem == newItem
     }
 }

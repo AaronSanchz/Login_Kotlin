@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: Transporte HTTP síncrono que debe invocarse en Dispatchers.IO. Envía método, ruta y JSONObject opcional; devuelve texto JSON. Usa tiempos de espera de 15 segundos y libera HttpURLConnection en finally.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 import org.json.JSONObject
@@ -8,11 +11,13 @@ import java.io.IOException
 
 /** Capa de transporte: conexión HTTP, tiempos de espera y traducción de códigos de error. */
 fun interface StoreTransport {
+    /** Contrato de transporte: recibe método, ruta y JSON opcional; devuelve texto del servidor o lanza error. La implementación real se llama fuera del hilo principal. */
     fun request(method: String, path: String, body: JSONObject?): String
 }
 
 /** Se ejecuta en Dispatchers.IO; siempre libera la conexión, incluso ante un error. */
 class HttpStoreTransport : StoreTransport {
+    /** Contrato de transporte: recibe método, ruta y JSON opcional; devuelve texto del servidor o lanza error. La implementación real se llama fuera del hilo principal. */
     override fun request(method: String, path: String, body: JSONObject?): String {
         val connection = URL("https://fakestoreapi.com$path").openConnection() as HttpURLConnection
         try {

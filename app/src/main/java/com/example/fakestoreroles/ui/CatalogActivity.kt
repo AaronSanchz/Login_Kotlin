@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: US02 a US06: verifica sesión, obtiene CatalogViewModel y observa StateFlow durante STARTED. RecyclerView usa ProductAdapter; botones filtran, reintentan, abren detalle/alta o borran sesión y carrito.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Catálogo, filtros, carga, errores y navegación. */
@@ -18,14 +21,16 @@ import kotlinx.coroutines.launch
 class CatalogActivity : AppCompatActivity() {
     private lateinit var model: CatalogViewModel
     private val detail = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == RESULT_OK) model.load(model.state.value.selected)
+        if (it.resultCode == RESULT_OK) model.load()
     }
+    /** Entrada del ciclo de vida Android: enlaza o construye vistas, revisa sesión cuando aplica y prepara callbacks de esta pantalla. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val session = SessionManager.getSession(this) ?: run { goLogin(); return }
         val app = applicationContext
         val repo = HttpProductRepository({ SessionManager.getSession(app) })
         model = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            /** Construye el ViewModel con el repositorio. Este create no es el POST de productos. */
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T = CatalogViewModel(repo) as T
         })[CatalogViewModel::class.java]
@@ -39,6 +44,10 @@ class CatalogActivity : AppCompatActivity() {
         }, LinearLayout.LayoutParams(0,-2,1f))
         if (session.role == UserRole.ADMINISTRADOR) actions.addView(action("Usuarios") { startActivity(Intent(this, AdminActivity::class.java)) }, LinearLayout.LayoutParams(0,-2,1f))
         root.addView(actions)
+        // US06: el acceso de alta solo se construye para administradores.
+        if (session.role == UserRole.ADMINISTRADOR) root.addView(action("Agregar producto") {
+            startActivity(Intent(this, ProductCreateActivity::class.java))
+        })
         val categoriesProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { isIndeterminate = true }
         root.addView(categoriesProgress, LinearLayout.LayoutParams(-1, dp(4)))
         val categoryRetry = action("Reintentar categorías") { model.loadCategories() }; root.addView(categoryRetry)
@@ -61,6 +70,7 @@ class CatalogActivity : AppCompatActivity() {
                     categoryRetry.visibility = if(state.categoryError != null) View.VISIBLE else View.GONE
                     if (lastCategories != state.categories || lastSelected != state.selected) {
                         categoryRow.removeAllViews()
+                        /** title es etiqueta; value es categoría HTTP o null para Ver todos. */
                         fun addCategory(title: String, value: String?) {
                             categoryRow.addView(action(if(state.selected == value) "✓ $title" else title) {
                                 model.load(if(state.selected == value) null else value)
@@ -80,6 +90,7 @@ class CatalogActivity : AppCompatActivity() {
             }
         }
     }
+    /** Abre LoginActivity con historial borrado y finaliza la Activity protegida, evitando volver con Atrás. */
     private fun goLogin() {
         startActivity(Intent(this, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)); finish()
     }

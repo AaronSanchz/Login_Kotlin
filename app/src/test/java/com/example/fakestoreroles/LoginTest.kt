@@ -1,3 +1,4 @@
+// PRUEBAS: ejecutan reglas y flujos con dobles de red. No demuestran disponibilidad de la API ni ejecución en un teléfono.
 package com.example.fakestoreroles
 
 import org.junit.Assert.*

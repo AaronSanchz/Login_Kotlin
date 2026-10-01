@@ -1,3 +1,4 @@
+// PRUEBAS: ejecutan reglas y flujos con dobles de red. No demuestran disponibilidad de la API ni ejecución en un teléfono.
 package com.example.fakestoreroles
 
 import org.junit.Assert.*
@@ -53,6 +54,7 @@ class ProductTest {
         listOf(UserRole.CLIENTE,UserRole.AUDITOR,null).forEach { role ->
             var calls=0
             val repo = HttpProductRepository({role?.let { session(it) }},StoreTransport { _,_,_ -> calls++;json })
+            assertThrows(ApiException::class.java) { repo.create(Product.fromJson(JSONObject(json)).copy(id=0),listOf("men's clothing")) }
             assertThrows(ApiException::class.java) { repo.update(Product.fromJson(JSONObject(json)),listOf("men's clothing")) }
             assertThrows(ApiException::class.java) { repo.delete(1) }
             assertEquals(0,calls)
@@ -70,7 +72,16 @@ class ProductTest {
         var calls=0
         val repo = HttpProductRepository({session(UserRole.ADMINISTRADOR)},StoreTransport { _,_,_ -> calls++;json })
         assertThrows(ApiException::class.java) { repo.update(Product.fromJson(JSONObject(json)).copy(title=""),listOf("men's clothing")) }
+        assertThrows(ApiException::class.java) { repo.create(Product.fromJson(JSONObject(json)).copy(id=0,title=""),listOf("men's clothing")) }
         assertEquals(0,calls)
+    }
+    @Test fun adminCreatesWithPostAndServerId() {
+        var path = ""
+        val repo = HttpProductRepository({session(UserRole.ADMINISTRADOR)},StoreTransport { method,p,body ->
+            assertEquals("POST",method); path=p; assertFalse(body!!.has("id")); json
+        })
+        val created = repo.create(Product.fromJson(JSONObject(json)).copy(id=0),listOf("men's clothing"))
+        assertEquals("/products",path); assertEquals(1,created.id)
     }
     @Test fun categoryMismatchAndUnconfirmedWritesFailClosed() {
         val p = Product.fromJson(JSONObject(json))

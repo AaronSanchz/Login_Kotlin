@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: Panel heredado del Administrador con activity_admin.xml. Comprueba sesión/rol antes de GET /users, crea filas informativas y permite recarga. logout borra sesión y carrito y elimina historial con CLEAR_TASK.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 /** Pantalla y acciones disponibles para el administrador. */
@@ -22,6 +25,7 @@ class AdminActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
 
+    /** Entrada del ciclo de vida Android: enlaza o construye vistas, revisa sesión cuando aplica y prepara callbacks de esta pantalla. */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,6 +51,7 @@ class AdminActivity : AppCompatActivity() {
         loadUsers()
     }
 
+    /** Evita recargas duplicadas, solicita usuarios fuera del hilo visual y representa lista vacía o error. */
     private fun loadUsers() {
         if (loading) return
         loading = true
@@ -69,6 +74,7 @@ class AdminActivity : AppCompatActivity() {
             }
         }
     }
+    /** Construye fila informativa de un UserItem: ID, nombre, usuario, correo y rol calculado localmente. */
     private fun addUserView(user: UserItem) {
         val textView = TextView(this)
         val fullName = "${user.firstName} ${user.lastName}".trim().ifBlank { "Usuario" }
@@ -93,12 +99,14 @@ class AdminActivity : AppCompatActivity() {
         usersContainer.addView(separator)
     }
 
+    /** Borra preferencias de sesión, vacía carrito y abre Login con historial eliminado; informa fallo si no puede borrar. */
     private fun logout() {
         try { SessionManager.clearSession(this) } catch (_: Exception) { message.text = "No se pudo cerrar sesión. Reintenta."; return }
         CartState.clear()
         goToLogin()
     }
 
+    /** Abre LoginActivity con NEW_TASK/CLEAR_TASK y finaliza la pantalla protegida. */
     private fun goToLogin() {
         val intent = Intent(this, LoginActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

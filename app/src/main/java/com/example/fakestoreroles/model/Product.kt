@@ -1,3 +1,6 @@
+// GUÍA DEL ARCHIVO: Product y Rating son data classes. fromJson comprueba campos, ID entero positivo y precio; toJson construye JSONObject para POST/PUT. Los datos obligatorios inválidos producen ApiException.
+// Consulta docs/GUIA_APRENDIZAJE_US01_US08.html para sintaxis, recorridos y ejercicios.
+
 package com.example.fakestoreroles
 
 import org.json.JSONObject
@@ -8,11 +11,14 @@ data class Product(
     val description: String, val category: String, val image: String,
     val rating: Rating? = null
 ) {
+    /** Serializa los campos del producto para el cuerpo HTTP. No incluye rating; create elimina id antes de POST. */
     fun toJson() = JSONObject().put("id", id).put("title", title).put("price", price)
         .put("description", description).put("category", category).put("image", image)
 
     companion object {
+        /** Construye un Product validado desde JSON recibido; rechaza campos obligatorios ausentes o tipos incorrectos. */
         fun fromJson(raw: JSONObject): Product {
+            /** Extrae un campo JSON de texto obligatorio; los datos ausentes o en blanco producen error de dominio. */
             fun required(key: String): String = (raw.opt(key) as? String)?.trim()
                 ?.takeIf { it.isNotEmpty() } ?: throw ApiException("Datos de producto inválidos.")
             val id = raw.opt("id") as? Number ?: throw ApiException("ID inválido.")
